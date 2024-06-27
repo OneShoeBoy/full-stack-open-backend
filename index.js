@@ -62,6 +62,8 @@ app.delete("/api/people/:id", (request, response) => {
   const id = request.params.id;
   const newPeople = people.filter(person=> person.id !== id);
 
+  people = newPeople
+
   response.status(204).end()
 });
 
@@ -75,13 +77,25 @@ app.post("/api/people", (request, response) => {
 	const id = generateId();
 	const body = request.body
 	
-	const person = {
-		id: id,
-		name: body.name,
-		number: body.number
-	}	
-	people = people.concat(person)
-	response.json(person);
+	const nameArray = people.map(person=>person.name.toLowerCase())
+	
+  if(nameArray.includes(body.name.toLowerCase())=== true){
+		response.status(400).json({
+      error: "Duplicate name"
+    }).end()
+	} else if(!body.name || !body.number){
+    response.status(400).json({
+      error: "Content missing"
+    }).end()
+	} else {
+    const person = {
+      id: id,
+      name: body.name,
+      number: body.number
+    }	
+    people = people.concat(person)
+    response.json(person);
+  }	
 })
 
 app.listen(PORT, () => {
