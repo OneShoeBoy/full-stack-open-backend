@@ -5,7 +5,7 @@ const PORT = 3001;
 
 app.use(express.json());
 
-const people = [
+let people = [
   {
     id: "1",
     name: "Arto Hellas",
@@ -63,7 +63,26 @@ app.delete("/api/people/:id", (request, response) => {
   const newPeople = people.filter(person=> person.id !== id);
 
   response.status(204).end()
-  });
+});
+
+function generateId(){
+	const maxId =
+	  people.length > 0 ? Math.max(...people.map((person) => Number(person.id))) : 0;
+	return String(maxId + 1);
+  };
+
+app.post("/api/people", (request, response) => {
+	const id = generateId();
+	const body = request.body
+	
+	const person = {
+		id: id,
+		name: body.name,
+		number: body.number
+	}	
+	people = people.concat(person)
+	response.json(person);
+})
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
