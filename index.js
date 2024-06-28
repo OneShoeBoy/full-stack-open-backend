@@ -1,9 +1,19 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
 const PORT = 3001;
 
 app.use(express.json());
+
+morgan.token("body", (req) => {
+  return JSON.stringify(req.body);
+});
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body"),
+);
+
+let logger = morgan("tiny");
 
 let people = [
   {
@@ -43,7 +53,7 @@ app.get("/info", (request, response) => {
   response.send(
     `Phonebook has info for ${nbrPeople} people.
         <br>
-        Accessed: ${datetimeNow}`
+        Accessed: ${datetimeNow}`,
   );
 });
 
@@ -60,43 +70,51 @@ app.get("/api/people/:id", (request, response) => {
 
 app.delete("/api/people/:id", (request, response) => {
   const id = request.params.id;
-  const newPeople = people.filter(person=> person.id !== id);
+  const newPeople = people.filter((person) => person.id !== id);
 
-  people = newPeople
+  people = newPeople;
 
-  response.status(204).end()
+  response.status(204).end();
 });
 
-function generateId(){
-	const maxId =
-	  people.length > 0 ? Math.max(...people.map((person) => Number(person.id))) : 0;
-	return String(maxId + 1);
-  };
+function generateId() {
+  const maxId =
+    people.length > 0
+      ? Math.max(...people.map((person) => Number(person.id)))
+      : 0;
+  return String(maxId + 1);
+}
 
 app.post("/api/people", (request, response) => {
-	const id = generateId();
-	const body = request.body
-	
-	const nameArray = people.map(person=>person.name.toLowerCase())
-	
-  if(nameArray.includes(body.name.toLowerCase())=== true){
-		response.status(400).json({
-      error: "Duplicate name"
-    }).end()
-	} else if(!body.name || !body.number){
-    response.status(400).json({
-      error: "Content missing"
-    }).end()
-	} else {
+  const id = generateId();
+  const body = request.body;
+
+  const nameArray = people.map((person) => person.name.toLowerCase());
+
+  if (nameArray.includes(body.name.toLowerCase()) === true) {
+    response
+      .status(400)
+      .json({
+        error: "Duplicate name",
+      })
+      .end();
+  } else if (!body.name || !body.number) {
+    response
+      .status(400)
+      .json({
+        error: "Content missing",
+      })
+      .end();
+  } else {
     const person = {
       id: id,
       name: body.name,
-      number: body.number
-    }	
-    people = people.concat(person)
+      number: body.number,
+    };
+    people = people.concat(person);
     response.json(person);
-  }	
-})
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
